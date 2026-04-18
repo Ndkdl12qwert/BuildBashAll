@@ -41,8 +41,8 @@ chinese
 ## 支持范围
 
 # x86_64 Dynamic/x86_64 static/ARM64 Dynamic/ARM64 static
-# i686 Dynamic/i686 static/ARM32 Dynamic Hard/ARM32 Dynamic soft
-# /ARM32 Dynamic soft/ARM32 static Hard
+# i686 Dynamic/i686 static/ARM32 Dynamic HardFloating point/ARM32 Dynamic softFloating point
+# /ARM32 Dynamic softFloating point/ARM32 static HardFloating point
 # RISC-V64 Dynamic RISC-V64 Static
 
 
