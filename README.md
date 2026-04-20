@@ -7,7 +7,7 @@ One-click compile Bash, supporting multiple architectures, multiple versions, an
 
 # x86_64 Dynamic / x86_64 Static / ARM64 Dynamic / ARM64 Static
 # i686 Dynamic / i686 Static / ARM32 Dynamic HardFloating point / ARM32 Dynamic SoftFloating point
-# /ARM32 Dynamic SoftFloating point / ARM32 Static HardFloating point
+# /ARM32 Static SoftFloating point / ARM32 Static HardFloating point
 # RISC-V64 Dynamic / RISC-V64 Static
 # RISC-V32 Dynamic RISC-V32 Static
 
@@ -45,7 +45,7 @@ chinese
 
 # x86_64 Dynamic/x86_64 static/ARM64 Dynamic/ARM64 static
 # i686 Dynamic/i686 static/ARM32 Dynamic HardFloating point/ARM32 Dynamic softFloating point
-# /ARM32 Dynamic softFloating point/ARM32 static HardFloating point
+  # /ARM32 Static softFloating point/ARM32 static HardFloating point
 # RISC-V64 Dynamic RISC-V64 Static
 # RISC-V32 Dynamic RISC-V32 Static
 
