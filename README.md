@@ -27,7 +27,7 @@ One-click compile Bash, supporting multiple architectures, multiple versions, an
 
 ## Statistics
 
-- Lines of code: 1147
+- Lines of code: 1197
 - Supported architectures: 6
 - Compilation combinations: 50
 - Number of states: 300
@@ -66,7 +66,7 @@ chinese
 
 ## 统计
 
-- 代码行数：1147
+- 代码行数：1197
 - 支持架构：6
 - 编译组合：50+
 - 状态数：300+
