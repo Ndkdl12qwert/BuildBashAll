@@ -1,9 +1,9 @@
 #!/bin/bash
 
-RED='\033[1;31m'
-GREEN='\033[1;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+RED=$'\033[1;31m'
+GREEN=$'\033[1;32m'
+YELLOW=$'\033[1;33m'
+NC=$'\033[0m'
 
 ba=$(find $HOME/bashbuild -name "bash")
 if [[ -z "${ba}" ]]; then
@@ -16,21 +16,85 @@ fi
 clear
 
 error_exit() {
+    local version="$1"
+    local error_msg="$2"
     local log_content=""
-    echo -e "${RED}[ERROR]${NC} $1"
     
-    if [[ -d "$HOME/bashbuild" ]]; then
-        log_content=$(find "$HOME/bashbuild" -name "build.log" -exec cat {} \; 2>/dev/null)
+    echo -e "${RED}[ERROR]${NC} $error_msg"
+    
+    if [[ -d "$HOME/bashbuild/bash-${version}" ]]; then
+        log_content=$(find "$HOME/bashbuild/bash-${version}" -name "build.log" -exec cat {} \; 2>/dev/null)
     fi
     
     if [[ -n "$log_content" ]]; then
-        echo -e "${YELLOW}=== Build log ===${NC}"
-        echo "$log_content"
+        read -p "${YELLOW}Export artifacts? (Y/n)>>${NC} " export_answer
+        if [[ "$export_answer" == "Y" || "$export_answer" == "y" ]]; then
+            read -p "${GREEN}Export target directory>>${NC} " export_dir
+            export_dir="${export_dir/#\~/$HOME}"
+            if [[ "$export_dir" == "$HOME"* ]]; then
+                mkdir -p "$export_dir" 2>/dev/null
+                if [[ $? -eq 0 ]]; then
+                    cp "$HOME/bashbuild/bash-${version}/build.log" "$export_dir/" 2>/dev/null
+                    if [[ $? -eq 0 ]]; then
+                        echo -e "${GREEN}Export successful!${NC}"
+                    else
+                        echo -e "${RED}Export failed. No artifacts found or permission denied.${NC}"
+                    fi
+                else
+                    echo -e "${RED}Cannot create target directory. Check permissions.${NC}"
+                fi
+            else
+                echo -e "${RED}Sorry, please save to home directory!${NC}"
+                sleep 1
+            fi
+        elif [[ "$export_answer" == "N" || "$export_answer" == "n" ]]; then
+            echo -e "${YELLOW}=== Build log ===${NC}"
+            echo "$log_content"
+        else
+            echo "Invalid input. Showing log."
+            echo -e "${YELLOW}=== Build log ===${NC}"
+            echo "$log_content"
+        fi
     else
         echo "No build logs found."
     fi
     
     exit 1
+}
+
+Architecture_Selection() {
+    if [[ "$build_type" == "Dynamic" || "$build_type" == "dynamic" ]]; then
+        read -p "Select version [default: 5.2]: " version
+        version=${version:-5.2}
+    
+        case $version in
+            5.0|5.1|5.2|5.3)
+                $1 "$version"
+                break
+                ;;
+            *)
+                echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
+                ;;
+            esac
+        echo -e "${GREEN}✓ Script completed!${NC}"
+    elif [[ "$build_type" == "Static" || "$build_type" == "static" ]]; then
+        read -p "Select version [default: 5.2]: " version
+    
+        version=${version:-5.2}
+    
+        case $version in
+            5.0|5.1|5.2|5.3)
+                $2 "$version"
+                break
+                ;;
+            *)
+                echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
+                ;;
+            esac
+        echo -e "${GREEN}✓ Script completed!${NC}"
+    else
+        echo -e "${RED}Invalid input. Please enter 'Dynamic' or 'Static'.${NC}"
+    fi
 }
 
 check_dependency() {
@@ -1239,269 +1303,21 @@ while true; do
     read -p "Architecture (x86_64|ARM64/ARM32|i686/RISC-V64/32|PowerPC/mips)?>>" arch
     read -p "Dynamic/Static? >> " build_type
     if [[ "$arch" == "x86_64" || "$arch" == "X86_64" ]]; then
-        if [[ "$build_type" == "Dynamic" || "$build_type" == "dynamic" ]]; then
-            read -p "Select version [default: 5.2]: " version
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_DX "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        elif [[ "$build_type" == "Static" || "$build_type" == "static" ]]; then
-            read -p "Select version [default: 5.2]: " version
-    
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_SX "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        else
-            echo -e "${RED}Invalid input. Please enter 'Dynamic' or 'Static'.${NC}"
-        fi 
+        Architecture_Selection build_bash_version_DX build_bash_version_SX
     elif [[ "$arch" == "ARM64" || "$arch" == "arm64" ]]; then
-        if [[ "$build_type" == "Dynamic" || "$build_type" == "dynamic" ]]; then
-            read -p "Select version [default: 5.2]: " version
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_DA "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        elif [[ "$build_type" == "Static" || "$build_type" == "static" ]]; then
-            read -p "Select version [default: 5.2]: " version
-    
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_SA "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        else
-            echo -e "${RED}Invalid input. Please enter 'Dynamic' or 'Static'.${NC}"
-        fi 
+        Architecture_Selection A build_bash_version_SA
     elif [[ "$arch" == "i686" || "$arch" == "I686" ]]; then
-        if [[ "$build_type" == "Dynamic" || "$build_type" == "dynamic" ]]; then
-            read -p "Select version [default: 5.2]: " version
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_DI "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        elif [[ "$build_type" == "Static" || "$build_type" == "static" ]]; then
-            read -p "Select version [default: 5.2]: " version
-    
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_SI "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        else
-            echo -e "${RED}Invalid input. Please enter 'Dynamic' or 'Static'.${NC}"
-        fi
+        Architecture_Selection build_bash_version_DI build_bash_version_SI
     elif [[ "$arch" == "ARM32" || "$arch" == "arm32" ]]; then
-        if [[ "$build_type" == "Dynamic" || "$build_type" == "dynamic" ]]; then
-            read -p "Select version [default: 5.2]: " version
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_DA3 "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        elif [[ "$build_type" == "Static" || "$build_type" == "static" ]]; then
-            read -p "Select version [default: 5.2]: " version
-    
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_SA3 "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        else
-            echo -e "${RED}Invalid input. Please enter 'Dynamic' or 'Static'.${NC}"
-        fi
+        Architecture_Selection build_bash_version_DA3 build_bash_version_SA3
     elif [[ "$arch" == "RISC-V64" || "$arch" == "risc-v64" ]]; then
-        if [[ "$build_type" == "Dynamic" || "$build_type" == "dynamic" ]]; then
-            read -p "Select version [default: 5.2]: " version
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_DR "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        elif [[ "$build_type" == "Static" || "$build_type" == "static" ]]; then
-            read -p "Select version [default: 5.2]: " version
-    
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_SR "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        else
-            echo -e "${RED}Invalid input. Please enter 'Dynamic' or 'Static'.${NC}"
-        fi
+        Architecture_Selection build_bash_version_DR build_bash_version_SR
     elif [[ "$arch" == "RISC-V32" || "$arch" == "risc-v32" ]]; then
-        if [[ "$build_type" == "Dynamic" || "$build_type" == "dynamic" ]]; then
-            read -p "Select version [default: 5.2]: " version
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_DR3 "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        elif [[ "$build_type" == "Static" || "$build_type" == "static" ]]; then
-            read -p "Select version [default: 5.2]: " version
-    
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_SR3 "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        else
-            echo -e "${RED}Invalid input. Please enter 'Dynamic' or 'Static'.${NC}"
-        fi
+        Architecture_Selection build_bash_version_DR3 build_bash_version_SR3
     elif [[ "$arch" == "PowerPC" || "$arch" == "powerpc" ]]; then
-        if [[ "$build_type" == "Dynamic" || "$build_type" == "dynamic" ]]; then
-            read -p "Select version [default: 5.2]: " version
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_DP "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        elif [[ "$build_type" == "Static" || "$build_type" == "static" ]]; then
-            read -p "Select version [default: 5.2]: " version
-    
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_SP "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        else
-            echo -e "${RED}Invalid input. Please enter 'Dynamic' or 'Static'.${NC}"
-        fi
+        Architecture_Selection build_bash_version_DP build_bash_version_SP
     elif [[ "$arch" == "mips" || "$arch" == "MIPS" ]]; then
-        if [[ "$build_type" == "Dynamic" || "$build_type" == "dynamic" ]]; then
-            read -p "Select version [default: 5.2]: " version
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_DM "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        elif [[ "$build_type" == "Static" || "$build_type" == "static" ]]; then
-            read -p "Select version [default: 5.2]: " version
-    
-            version=${version:-5.2}
-    
-            case $version in
-                5.0|5.1|5.2|5.3)
-                    build_bash_version_SM "$version"
-                    break
-                    ;;
-                *)
-                    echo -e "${RED}Invalid version. Please choose 5.0, 5.1, 5.2, or 5.3${NC}"
-                    ;;
-                esac
-            echo -e "${GREEN}✓ Script completed!${NC}"
-        else
-            echo -e "${RED}Invalid input. Please enter 'Dynamic' or 'Static'.${NC}"
-        fi
+        Architecture_Selection build_bash_version_DM build_bash_version_SM
     else
         echo -e "${RED}Invalid architecture. Please enter x86_64, ARM64/ARM32, i686/RISC-V64, RISC-V32, PowerPC, or MIPS.${NC}"
     fi
